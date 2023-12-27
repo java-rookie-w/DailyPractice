@@ -5,8 +5,6 @@
 mianshi/pom.xml,0\9\0936d28af43ba269fe1b840d7bc70c45955a99a6
 f
 6mianshi/src/main/java/org/wang/mianshi/day1/Test1.java,9\7\97456615664d2e1672b416aeece32aaa29377552
-f
-6mianshi/src/main/java/org/wang/mianshi/day1/Test2.java,d\a\dae23334f67cd563b08af2c188ed62a99f55d868
 w
 G.idea/sonarlint/issuestore/4/4/442292b8a7efeabbe4cc176709b833b1792140ec,8\6\863e0292fd7e9b3e74dafd6cc01f73ba76346482
 Å
@@ -23,3 +21,6 @@ S
 ,.idea/inspectionProfiles/Project_Default.xml,4\9\496a238a6afa168dbaf6efd37bb459331589579c
 w
 G.idea/sonarlint/issuestore/0/9/0936d28af43ba269fe1b840d7bc70c45955a99a6,c\f\cf1a38351a12eec948047071f95acccf047f87e7
+:
+
+.gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
