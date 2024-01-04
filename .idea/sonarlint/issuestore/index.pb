@@ -24,3 +24,5 @@ G.idea/sonarlint/issuestore/0/9/0936d28af43ba269fe1b840d7bc70c45955a99a6,c\f\cf
 :
 
 .gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
+v
+Fmianshi/src/main/java/org/wang/mianshi/collectiontest/HashMapTest.java,1\a\1a2fd55d799ae0752fff9e905254bb20cb23ff1b
