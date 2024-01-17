@@ -42,3 +42,5 @@ t
 Dmianshi/src/main/java/org/wang/mianshi/theadtest/ThreadPoolTest.java,f\7\f7c5ca6106ff8610621212a9e29f6b51a50ead2f
 v
 Fmianshi/src/main/java/org/wang/mianshi/theadtest/ThreadPoolTrader.java,9\d\9ddb6c02a299b7b1681d589cb9fc287af2f22f88
+r
+Bmianshi/src/test/java/org/wang/mianshi/theadtest/JoinTestTest.java,1\a\1aa1de70e0d8c9247fa0bc17bff85d0f2aa23c7b
