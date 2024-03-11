@@ -2,7 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/DubboTest" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/springtest" vcs="Git" />
   </component>
 </project>
