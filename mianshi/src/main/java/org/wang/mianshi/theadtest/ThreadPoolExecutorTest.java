@@ -1,5 +1,6 @@
 package org.wang.mianshi.theadtest;
 
+import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,6 @@ public class ThreadPoolExecutorTest {
 
     public static void main(String[] args) {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, new ArrayBlockingQueue<>(queue_cap));
-
         for (int i = 0; i < 10; i++) {
             int finalI = i;
             executor.execute(()->{
