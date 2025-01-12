@@ -72,3 +72,5 @@ B
 Lmianshi/src/main/java/org/wang/mianshi/theadtest/ThreadPoolExecutorTest.java,7\2\72781ffa4101778bd649721c77e6de5010a6cfa2
 t
 Dmianshi/src/main/java/org/wang/mianshi/tools/ImageBase64Convert.java,1\4\14ba5b3a08dc08bd8daad01d06d58da3d5a670e8
+p
+@mianshi/src/main/java/org/wang/mianshi/collectiontest/List2.java,a\d\ad9ddaf1adbdf71c35c00df71a48f2d7f0c67652

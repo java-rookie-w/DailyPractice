@@ -21,7 +21,8 @@ public class ImageBase64Convert {
             System.out.println(base64Image);
             System.out.println("origin image size: " +imageBytes.length + ". Base64 length (imageSize / 3 * 4):" + base64Image.length());
         } catch (Exception e) {
-            e.printStackTrace();
+            e.    printStackTrace();
         }
     }
 }
+
