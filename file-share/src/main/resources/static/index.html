@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P File Share</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .status-bar {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .qr-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .qr-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .qr-container {
+            display: inline-block;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .qr-hint {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8ebff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .file-list {
+            margin-top: 30px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.9em;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .file-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 P2P File Share</h1>
+        <p class="subtitle">Simple and fast file transfer between devices</p>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span id="serverStatus">Server Ready</span>
+            </div>
+            <div class="status-item">
+                <strong>P2P Port:</strong> 8089
+            </div>
+            <div class="status-item">
+                <strong>LAN IP:</strong> <span id="lanIp" style="color: #667eea; font-weight: 600;">Loading...</span>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <div class="qr-title">📱 Scan to Connect from Mobile</div>
+            <div class="qr-container" id="qrcode"></div>
+            <div class="qr-hint" id="qrHint">Loading...</div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">☁️</div>
+            <h3>Drop files here or click to upload</h3>
+            <p style="color: #999; margin-top: 10px;">Support all file types</p>
+            <input type="file" id="fileInput">
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                📤 Select Files
+            </button>
+            <button class="btn btn-primary" onclick="refreshFiles()">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Uploading... 0%</div>
+
+        <div class="file-list" id="fileList">
+            <h3 style="margin-bottom: 15px; color: #333;">📂 Uploaded Files</h3>
+            <div id="filesContainer"></div>
+        </div>
+    </div>
+
+    <!-- QRCode.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    
+    <script>
+        const API_BASE = '/api/files';
+        let ws;
+
+        // WebSocket connection for device discovery
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/discovery`);
+            
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                document.getElementById('serverStatus').textContent = 'Connected';
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received:', data);
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                document.getElementById('serverStatus').textContent = 'Disconnected';
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Initialize
+        connectWebSocket();
+        refreshFiles();
+        generateQRCode();
+
+        // Generate QR Code for mobile access
+        function generateQRCode() {
+            // Get local IP address
+            fetch(API_BASE + '/info')
+                .then(response => response.json())
+                .then(data => {
+                    // Display LAN IP in status bar
+                    const lanIpSpan = document.getElementById('lanIp');
+                    if (data.localIp) {
+                        lanIpSpan.textContent = data.localIp;
+                    }
+                    
+                    // Use the LAN IP from server
+                    const localIP = data.localIp || 'localhost';
+                    const port = data.port || 8088;
+                    const url = `http://${localIP}:${port}`;
+                    
+                    // Generate QR code
+                    const qr = qrcode(0, 'M');
+                    qr.addData(url);
+                    qr.make();
+                    
+                    // Render QR code
+                    const qrContainer = document.getElementById('qrcode');
+                    qrContainer.innerHTML = qr.createImgTag(6, 2);
+                    
+                    // Update hint text
+                    document.getElementById('qrHint').textContent = `Scan to access: ${url}`;
+                    
+                    console.log('QR Code generated for:', url);
+                })
+                .catch(error => {
+                    console.error('Failed to generate QR code:', error);
+                    document.getElementById('qrHint').textContent = 'Failed to load QR code';
+                    document.getElementById('lanIp').textContent = 'Unknown';
+                });
+        }
+
+        // Get local IP address (works in browser)
+        function getLocalIP() {
+            // If accessed from network (not localhost), use the same host
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                return window.location.hostname;
+            }
+            
+            // For localhost access, we need to get the actual LAN IP from server
+            // This is a limitation - browser cannot directly get LAN IP
+            // User needs to manually replace localhost with their LAN IP
+            const serverIP = window.location.hostname;
+            
+            if (serverIP === 'localhost' || serverIP === '127.0.0.1') {
+                // Show instructions for finding LAN IP
+                const hint = document.getElementById('qrHint');
+                hint.innerHTML = `
+                    <div style="color: #f5576c; font-weight: 600; margin-bottom: 10px;">
+                        ⚠️ Currently accessing via localhost<br>
+                        To use on mobile, access via your LAN IP instead:
+                    </div>
+                    <div style="color: #667eea; font-family: monospace; font-size: 1.1em;">
+                        http://YOUR_LAN_IP:8088
+                    </div>
+                    <div style="margin-top: 10px; color: #999; font-size: 0.85em;">
+                        Find your LAN IP:<br>
+                        Windows: Run <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">ipconfig</code> in CMD<br>
+                        Look for "IPv4 Address" (usually starts with 192.168.x.x)
+                    </div>
+                `;
+                // Still generate QR for localhost (won't work for mobile)
+                return 'localhost';
+            }
+            
+            return serverIP;
+        }
+
+        // Upload area events
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fileInput.value = '';
+        });
+
+        // Handle file upload
+        async function handleFiles(files) {
+            for (const file of files) {
+                console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+                await uploadFile(file);
+            }
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressBar.style.display = 'block';
+            progressText.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Uploading... 0%';
+
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                
+                // Track upload progress
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percent = (e.loaded / e.total) * 100;
+                        progressFill.style.width = percent + '%';
+                        progressText.textContent = `Uploading... ${percent.toFixed(1)}%`;
+                        console.log(`Upload progress: ${percent.toFixed(1)}%`);
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    progressBar.style.display = 'none';
+                    progressText.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        console.log('Upload success:', response);
+                        showMessage('✅ File uploaded successfully!', 'success');
+                        refreshFiles();
+                        resolve(response);
+                    } else {
+                        console.error('Upload failed with status:', xhr.status, xhr.responseText);
+                        showMessage('❌ Upload failed: ' + xhr.responseText, 'error');
+                        reject(new Error(xhr.responseText));
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    progressBar.style.display = 'none';
+                    progressText.style.display = 'none';
+                    console.error('XHR error occurred');
+                    showMessage('❌ Upload failed - network error', 'error');
+                    reject(new Error('Network error'));
+                });
+
+                xhr.addEventListener('abort', () => {
+                    progressBar.style.display = 'none';
+                    progressText.style.display = 'none';
+                    console.log('Upload aborted');
+                    showMessage('❌ Upload aborted', 'error');
+                    reject(new Error('Aborted'));
+                });
+
+                xhr.open('POST', API_BASE + '/upload');
+                xhr.send(formData);
+            });
+        }
+
+        // Refresh file list
+        async function refreshFiles() {
+            try {
+                const response = await fetch(API_BASE + '/list');
+                const data = await response.json();
+                
+                const container = document.getElementById('filesContainer');
+                
+                if (data.success && data.files.length > 0) {
+                    container.innerHTML = data.files.map(file => `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-name">📄 ${escapeHtml(file.name)}</div>
+                                <div class="file-size">${formatSize(parseInt(file.size))}</div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-primary btn-small" onclick="downloadFile('${escapeHtml(file.name)}')">⬇️ Download</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteFile('${escapeHtml(file.name)}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No files uploaded yet</p>';
+                }
+            } catch (error) {
+                console.error('Failed to refresh files:', error);
+            }
+        }
+
+        // Download file
+        function downloadFile(filename) {
+            window.location.href = `/api/files/download/${encodeURIComponent(filename)}`;
+        }
+
+        // Delete file
+        async function deleteFile(filename) {
+            if (!confirm(`Delete "${filename}"?`)) return;
+
+            try {
+                const response = await fetch(API_BASE + '/delete/' + encodeURIComponent(filename), {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ File deleted', 'success');
+                    refreshFiles();
+                } else {
+                    showMessage('❌ Delete failed', 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Delete failed: ' + error.message, 'error');
+            }
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = 'message ' + type;
+            msgEl.style.display = 'block';
+            
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // Utility functions
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

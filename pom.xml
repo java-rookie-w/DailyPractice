@@ -6,7 +6,7 @@
   <packaging>pom</packaging>
   <modules>
     <module>mianshi</module>
-    <module>redis</module>
+    <module>redis-learning</module>
   </modules>
   <version>1.0-SNAPSHOT</version>
   <name>DailyPractice Maven Webapp</name>
