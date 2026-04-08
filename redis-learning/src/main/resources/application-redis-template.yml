@@ -22,7 +22,7 @@ spring:
         max-idle: 8
         min-idle: 0
         max-wait: -1ms
-
+aa: aa
 # ===========================================
 # Redis Cluster Configuration
 # ===========================================
