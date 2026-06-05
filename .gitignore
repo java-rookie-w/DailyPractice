@@ -37,8 +37,5 @@ build/
 ### AI Assistant ###
 .continue/
 
-### Personal Notes ###
-*.xmind
-
 ### Duplicate Config (template already exists) ###
 **/application-cluster.properties
