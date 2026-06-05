@@ -16,26 +16,17 @@
     <name>Redis Module</name>
     <description>Reusable Redis integration module with Spring Boot and Redisson</description>
 
-    <properties>
-        <spring.boot.version>2.7.0</spring.boot.version>
-        <redisson.version>3.16.4</redisson.version>
-        <lombok.version>1.18.24</lombok.version>
-        <jackson.version>2.13.4</jackson.version>
-    </properties>
-
     <dependencies>
         <!-- Spring Boot Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>${spring.boot.version}</version>
         </dependency>
 
         <!-- Spring Boot Data Redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-            <version>${spring.boot.version}</version>
         </dependency>
 
         <!-- Redisson for advanced Redis features -->
@@ -45,11 +36,10 @@
             <version>${redisson.version}</version>
         </dependency>
 
-        <!-- Jackson for JSON serialization -->
+        <!-- Jackson for JSON serialization (version managed by Spring Boot BOM) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
 
         <!-- Lombok -->
@@ -64,7 +54,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
-            <version>${spring.boot.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -72,31 +61,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <finalName>redis</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 </project>
