@@ -14,7 +14,8 @@ public class FileShareApplication {
         SpringApplication.run(FileShareApplication.class, args);
         System.out.println("\n===========================================");
         System.out.println("  P2P File Share Started Successfully!");
-        System.out.println("  Access: http://localhost:8081");
+        System.out.println("  Web: http://localhost:8088");
+        System.out.println("  P2P: port 8089");
         System.out.println("===========================================\n");
     }
 }
