@@ -10,6 +10,7 @@
     <module>file-share</module>
     <module>springboot-learning</module>
     <module>springcloud-learning</module>
+    <module>advanced-interview</module>
   </modules>
   <version>1.0-SNAPSHOT</version>
   <name>DailyPractice Maven Webapp</name>
