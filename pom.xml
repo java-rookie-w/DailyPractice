@@ -2,19 +2,21 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.wang</groupId>
-  <artifactId>DailyPractice</artifactId>
+  <artifactId>BackendLab</artifactId>
   <packaging>pom</packaging>
   <modules>
-    <module>mianshi</module>
-    <module>redis-learning</module>
-    <module>file-share</module>
-    <module>springboot-learning</module>
-    <module>springcloud-learning</module>
-    <module>advanced-interview</module>
+    <module>redis-lab</module>
+    <module>springcloud-lab</module>
+    <module>jvm-lab</module>
+    <module>rabbitmq-lab</module>
+    <module>kafka-lab</module>
+    <module>mysql-lab</module>
+    <module>netty-lab</module>
+    <module>interview-notes</module>
   </modules>
   <version>1.0-SNAPSHOT</version>
-  <name>DailyPractice Maven Webapp</name>
-  <url>http://maven.apache.org</url>
+  <name>BackendLab — Backend Technology Laboratory</name>
+  <description>A long-term personal backend technology experiment repository for Java, JVM, middleware, Spring Cloud, MySQL, Netty, Docker, and interview topics.</description>
   
   <properties>
     <java.version>17</java.version>
@@ -110,6 +112,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    <finalName>DailyPractice</finalName>
+    <finalName>BackendLab</finalName>
   </build>
 </project>
