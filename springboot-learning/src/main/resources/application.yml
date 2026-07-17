@@ -1,5 +1,0 @@
-spring:
-  application:
-    name: springboot-learning
-server:
-  port: 8082
