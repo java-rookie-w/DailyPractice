@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: rabbitmq-lab
+
+  rabbitmq:
+    # RabbitMQ connection settings
+    host: 192.168.6.132
+    port: 5672
+    username: admin
+    password: passw0rd
+    virtual-host: /mirror
+    
+    # Connection configuration
+    connection-timeout: 10000ms
+    
+    # Publisher settings
+    publisher-confirms: true
+    publisher-returns: true
+    
+    # Listener configuration
+    listener:
+      simple:
+        # Consumer prefetch count (balance between throughput and fair distribution)
+        prefetch: 1
+        # Acknowledge mode: AUTO (recommended), MANUAL, or NONE
+        acknowledge-mode: auto
+        # Whether to retry rejected messages
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-interval: 10000ms
+          multiplier: 1.0
+          max-attempts: 3
+
+logging:
+  level:
+    root: INFO
+    org.springframework.amqp: DEBUG
+    org.wang.rabbitmqlab: DEBUG
