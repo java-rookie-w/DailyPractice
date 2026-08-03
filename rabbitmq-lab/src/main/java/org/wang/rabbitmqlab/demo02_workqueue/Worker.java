@@ -34,8 +34,8 @@ public class Worker {
         final Channel channel = connection.createChannel();
 
         // 3. 声明队列（和 NewTask 一样，确保队列存在）
-        //    durable=true：持久化队列
-        //    arguments：quorum 队列类型
+        //    durable=true：持久化队列，Broker 重启后队列及其中的持久化消息不丢
+        //    arguments：quorum 队列类型（复制型、注重数据安全与一致性，官方要求必须 durable）
         channel.queueDeclare(QUEUE_NAME, true, false, false, Map.of("x-queue-type", "quorum"));
 
         // 4. 设置服务质量（QoS），控制预取数量
