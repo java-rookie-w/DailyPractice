@@ -36,10 +36,13 @@ public class NewTask {
 
             // 3. 声明队列（如果不存在则创建，存在则不做任何事）
             //    参数：队列名, 持久化, 排他, 自动删除, 额外参数
-            //    durable=true：队列元数据持久化到磁盘，Broker 重启后队列不丢
+            //    durable=true：队列声明持久化，Broker 重启后队列会恢复，
+            //                  连同其中以持久化方式（delivery mode=2）发布的消息
             //    exclusive=false：不排他，允许多个连接访问
             //    autoDelete=false：最后一个消费者断开后不自动删除
-            //    arguments：指定队列为 quorum（仲裁）类型，提供更强的一致性保证
+            //    arguments：指定队列类型为 quorum
+            //    官方文档：quorum 是"复制型、注重数据安全与一致性"的队列类型
+            //    基于 Raft 共识算法，数据在集群多节点间复制，官方要求必须 durable
             channel.queueDeclare(QUEUE_NAME, true, false, false, Map.of("x-queue-type", "quorum"));
 
             // 4. 循环发送 7 条消息
