@@ -9,6 +9,7 @@ import com.rabbitmq.client.DeliverCallback;       // 消息投递回调接口,�
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;         // 字符编码,用于消息体转换
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -61,8 +62,12 @@ public class ReceiveLogsStreamNext {
         Channel channel = connection.createChannel();
 
         // 3. 确保 stream 队列存在
-        channel.queueDeclare(STREAM_NAME, true, false, false,
-                Collections.singletonMap("x-queue-type", "stream"));
+        //    与生产者声明一致: x-queue-type / x-max-length-bytes / x-max-age
+        Map<String, Object> streamArgs = new HashMap<>();
+        streamArgs.put("x-queue-type", "stream");
+        streamArgs.put("x-max-length-bytes", 20_000_000_000L);
+        streamArgs.put("x-max-age", "7D");
+        channel.queueDeclare(STREAM_NAME, true, false, false, streamArgs);
 
         // ============================================================
         // 4. 设置 QoS prefetch(Stream 消费必须设置)
