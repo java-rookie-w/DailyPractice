@@ -4,7 +4,7 @@ package org.wang.rabbitmqlab.demo09_deadletter;
 import com.rabbitmq.client.BuiltinExchangeType;     // 内置交换机类型枚举（DIRECT/FANOUT/TOPIC...）
 import com.rabbitmq.client.Channel;                 // 信道，所有 AMQP 操作的入口
 import com.rabbitmq.client.Connection;              // 到 Broker 的 TCP 连接
-import com.rabbitmq.client.ConnectionFactory;       // 用于创建连接的工厂类
+import org.wang.rabbitmqlab.common.ConnectionUtil;       // 用于创建连接的工厂类
 
 import java.util.HashMap;                           // 哈希表（存放队列的额外参数 x-arguments）
 import java.util.Map;                               // Map 接口
@@ -79,17 +79,10 @@ public class DLXTopology {
     static final String DLX_ROUTING_KEY   = "order.close";          // 延迟队列过期后 → 死信交换机
 
     /**
-     * 创建并返回一个 RabbitMQ 连接
-     * 与其他 demo 共用同一套连接参数（192.168.6.132 / admin / /mirror）
+     * 创建并返回一个 RabbitMQ 连接（委托给通用工具类，连接参数集中管理）
      */
     static Connection createConnection() throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.6.132");           // Broker 的 IP 地址
-        factory.setPort(5672);                      // Broker 的 AMQP 端口
-        factory.setUsername("admin");               // 登录用户名
-        factory.setPassword("passw0rd");            // 登录密码
-        factory.setVirtualHost("/mirror");          // 虚拟主机
-        return factory.newConnection();
+        return ConnectionUtil.createConnection();
     }
 
     /**

@@ -2,8 +2,8 @@ package org.wang.rabbitmqlab.demo01_simple;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
+import org.wang.rabbitmqlab.common.ConnectionUtil;  // 连接工具：集中管理 Broker 连接参数
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -13,21 +13,9 @@ public class Recv {
     private static final String QUEUE_NAME = "hello";
 
      static void main(String[] args) throws Exception {
-        // 创建连接工厂，用于配置和生成 Connection
-        ConnectionFactory factory = new ConnectionFactory();
-        // 指定 RabbitMQ 服务器地址
-        factory.setHost("192.168.6.132");
-        // 指定 AMQP 协议端口（默认 5672）
-        factory.setPort(5672);
-        // 设置认证用户名
-        factory.setUsername("admin");
-        // 设置认证密码
-        factory.setPassword("passw0rd");
-        // 设置虚拟主机，实现资源隔离（类似 namespace）
-        factory.setVirtualHost("/mirror");
-
         // 建立 TCP 长连接（重量级资源，全局通常只维护一个）
-        Connection connection = factory.newConnection();
+        // 连接参数集中在 ConnectionUtil，改 Broker 只改一处
+        Connection connection = ConnectionUtil.createConnection();
         // 在 Connection 上创建虚拟通道（轻量级，每个线程/业务独立使用）
         Channel channel = connection.createChannel();
 

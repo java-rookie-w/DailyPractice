@@ -2,7 +2,7 @@ package org.wang.rabbitmqlab.demo01_simple;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import org.wang.rabbitmqlab.common.ConnectionUtil;  // 连接工具：集中管理 Broker 连接参数
 
 import java.util.Map;
 
@@ -11,22 +11,9 @@ public class Send {
     private static final String QUEUE_NAME = "hello";
 
     public static void main(String[] args) throws Exception {
-        // 创建连接工厂，用于配置和生成 Connection
-        ConnectionFactory factory = new ConnectionFactory();
-        // 指定 RabbitMQ 服务器地址
-        factory.setHost("192.168.6.132");
-        // 指定 AMQP 协议端口（默认 5672）
-        factory.setPort(5672);
-        // 设置认证用户名
-        factory.setUsername("admin");
-        // 设置认证密码
-        factory.setPassword("passw0rd");
-        // 设置虚拟主机，实现资源隔离（类似 namespace）
-        factory.setVirtualHost("/mirror");
-
         // try-with-resources：自动关闭 Connection 和 Channel
-        // 发送方发完消息就结束，适合自动释放资源
-        try (Connection connection = factory.newConnection();
+        // 连接参数集中在 ConnectionUtil，改 Broker 只改一处
+        try (Connection connection = ConnectionUtil.createConnection();
              Channel channel = connection.createChannel()) {
 
             // 声明队列参数：指定为 quorum（仲裁）队列，要求 durable=true

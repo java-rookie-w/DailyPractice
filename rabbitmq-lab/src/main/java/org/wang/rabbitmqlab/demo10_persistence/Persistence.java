@@ -3,7 +3,7 @@ package org.wang.rabbitmqlab.demo10_persistence;
 // RabbitMQ Java 客户端核心类
 import com.rabbitmq.client.Channel;                 // 信道，所有 AMQP 操作的入口
 import com.rabbitmq.client.Connection;              // 到 Broker 的 TCP 连接
-import com.rabbitmq.client.ConnectionFactory;       // 用于创建连接的工厂类
+import org.wang.rabbitmqlab.common.ConnectionUtil;       // 用于创建连接的工厂类
 import com.rabbitmq.client.GetResponse;             // basicGet 的返回结果（含消息体和元信息）
 import com.rabbitmq.client.MessageProperties;       // 消息属性常量（持久化/非持久化文本）
 
@@ -61,16 +61,10 @@ public class Persistence {
     static final String TRANSIENT_QUEUE = "persist.transient.queue";
 
     /**
-     * 创建连接（与其他 demo 共用同一套连接参数）
+     * 创建连接（委托给通用工具类，连接参数集中管理）
      */
     static Connection createConnection() throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.6.132");           // Broker 的 IP 地址
-        factory.setPort(5672);                      // Broker 的 AMQP 端口
-        factory.setUsername("admin");               // 登录用户名
-        factory.setPassword("passw0rd");            // 登录密码
-        factory.setVirtualHost("/mirror");          // 虚拟主机
-        return factory.newConnection();
+        return ConnectionUtil.createConnection();
     }
 
     public static void main(String[] args) throws Exception {

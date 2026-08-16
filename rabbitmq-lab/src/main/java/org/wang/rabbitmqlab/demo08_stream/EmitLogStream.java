@@ -3,7 +3,7 @@ package org.wang.rabbitmqlab.demo08_stream;
 // RabbitMQ Java 客户端核心类
 import com.rabbitmq.client.Channel;                  // 信道,所有 AMQP 操作的入口
 import com.rabbitmq.client.Connection;                // 到 Broker 的 TCP 连接
-import com.rabbitmq.client.ConnectionFactory;         // 用于创建连接的工厂类
+import org.wang.rabbitmqlab.common.ConnectionUtil;         // 用于创建连接的工厂类
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;             // 字符编码,用于消息体转换
@@ -49,16 +49,9 @@ public class EmitLogStream {
 
     static void main() throws IOException, TimeoutException {
 
-        // 1. 创建连接工厂,配置 Broker 的连接信息
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.6.132");          // Broker 的 IP 地址
-        factory.setPort(5672);                     // Broker 的 AMQP 端口
-        factory.setUsername("admin");              // 登录用户名
-        factory.setPassword("passw0rd");           // 登录密码
-        factory.setVirtualHost("/mirror");         // 虚拟主机
-
+        // 1. 建立连接:连接参数集中在 ConnectionUtil,改 Broker 只改一处
         // 2. 建立连接和信道(try-with-resources 自动关闭)
-        try (Connection connection = factory.newConnection();
+        try (Connection connection = ConnectionUtil.createConnection();
              Channel channel = connection.createChannel()) {
 
             // ============================================================

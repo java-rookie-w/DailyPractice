@@ -3,8 +3,8 @@ package org.wang.rabbitmqlab.demo02_workqueue;
 // RabbitMQ Java 客户端核心类
 import com.rabbitmq.client.Channel;              // 信道，所有 AMQP 操作的入口
 import com.rabbitmq.client.Connection;            // 到 Broker 的 TCP 连接
-import com.rabbitmq.client.ConnectionFactory;     // 用于创建连接的工厂类
 import com.rabbitmq.client.MessageProperties;     // 预定义的消息属性（如持久化）
+import org.wang.rabbitmqlab.common.ConnectionUtil; // 连接工具：集中管理 Broker 连接参数
 
 import java.io.IOException;
 import java.util.Map;                             // 用于传递 queue 的额外参数
@@ -21,17 +21,10 @@ public class NewTask {
 
     public static void main(String[] args) throws IOException, TimeoutException {
 
-        // 1. 创建连接工厂，配置 Broker 的连接信息
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.6.132");          // Broker 的 IP 地址
-        factory.setPort(5672);                     // Broker 的 AMQP 端口（默认 5672）
-        factory.setUsername("admin");              // 登录用户名
-        factory.setPassword("passw0rd");           // 登录密码
-        factory.setVirtualHost("/mirror");         // 虚拟主机，逻辑隔离的命名空间
-
-        // 2. 建立连接和信道（try-with-resources 自动关闭）
+        // 1. 建立连接和信道（try-with-resources 自动关闭）
+        //    连接参数集中在 ConnectionUtil，改 Broker 只改一处
         //    Connection 代表一个 TCP 连接，Channel 是连接内的虚拟连接（多路复用）
-        try (Connection connection = factory.newConnection();
+        try (Connection connection = ConnectionUtil.createConnection();
              Channel channel = connection.createChannel()) {
 
             // 3. 声明队列（如果不存在则创建，存在则不做任何事）
