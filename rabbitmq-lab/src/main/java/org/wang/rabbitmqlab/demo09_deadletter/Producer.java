@@ -8,26 +8,21 @@ import com.rabbitmq.client.MessageProperties;       // 消息属性常量（PERS
 import java.nio.charset.StandardCharsets;           // 字符编码
 
 /**
- * Demo09 - 死信队列生产者（延迟关单发消息端）
+ * Demo09 - 死信队列生产者
  *
- * 职责：模拟「用户下单」动作 —— 把订单消息发到【延迟队列】
+ * 职责：分别往 TTL_QUEUE 和 MAXLEN_QUEUE 发消息，触发两种死信条件
  *
  * ============================================================
  *  消息流向：
  *  ============================================================
- *  Producer → DELAY_EXCHANGE(topic) → DELAY_QUEUE(带 TTL=10s)
- *                                        │
- *                                        │ (10 秒后过期)
- *                                        ▼
- *                               DLX_EXCHANGE(direct) → DLX_QUEUE → Consumer
+ *  发 TTL 队列：3 条消息，5 秒后【全部过期】→ 死信交换机 → 死信队列
+ *  发超长队列：5 条消息，但队列 x-max-length=3 → 【队头 2 条】被挤成死信 → 死信队列
  *
- * ============================================================
- *  关键点：
- *  ============================================================
- *  1. Producer 只管发消息到延迟交换机，完全不关心后续死信流程
- *  2. 消息用 persistent（delivery_mode=2），配合 durable Queue 才能真正防丢
- *  3. 发送时【不需要】设单条 expiration，TTL 由队列级 x-message-ttl 统一控制
- *     —— 队列级 TTL 更准，消息级 TTL 在队列堆积时不准（只在队头检查）
+ *  注意两个业务队列【本 demo 都不消费】，纯粹为了触发死信：
+ *    - TTL 队列：等过期
+ *    - 超长队列：等塞满后继续塞，把队头挤出去
+ *
+ *  生产上「消费失败进死信」是第三种触发，demo11_reliability 里演示，这里不重复。
  *
  * @author wang
  * @date 2026-08-12
@@ -40,41 +35,43 @@ public class Producer {
              Channel ch = conn.createChannel()) {
 
             // 2. 声明拓扑（如果还没建过，这里会幂等创建；已存在则复用）
-            //    Producer 自己声明拓扑是为了「自给自足」，避免依赖运行顺序
             DLXTopology.declareTopology(ch);
 
             // ============================================================
-            // 3. 模拟下 3 笔订单：用不同 orderId 模拟不同支付情况
+            // 3. 往 TTL_QUEUE 发 3 条消息：5 秒后全部过期变死信
             // ============================================================
-            String[] orderIds = {
-                    "ORDER-001",   // 这笔不支付 → 10 秒后被关单
-                    "ORDER-002",   // 这笔不支付 → 10 秒后被关单
-                    "ORDER-003"    // 这笔不支付 → 10 秒后被关单
-                    // （演示场景：3 笔都不支付，全部应该进死信队列被关单）
-                    // 真实场景下支付回调会更新订单状态，Consumer 检查到已支付就忽略
-            };
-
-            for (String orderId : orderIds) {
-                // 消息体：直接用 orderId，真实场景会是 JSON（含订单金额、商品等）
-                String message = orderId;
-
-                // 4. 发送到延迟交换机，routing key = order.delay
-                //    MessageProperties.PERSISTENT_TEXT_PLAIN = persistent + text/plain
-                //    persistent（delivery_mode=2）让消息落盘，配合 durable Queue 防 Broker 重启丢消息
+            // 队列级 TTL 由 Broker 统一定时器触发，与消息位置无关，过期时间精确
+            for (int i = 1; i <= 3; i++) {
+                String msg = "ttl消息-" + i;
                 ch.basicPublish(
-                        DLXTopology.DELAY_EXCHANGE,            // 目标 exchange
-                        DLXTopology.DELAY_ROUTING_KEY,         // routing key = order.delay
-                        MessageProperties.PERSISTENT_TEXT_PLAIN, // 持久化 + 文本类型
-                        message.getBytes(StandardCharsets.UTF_8) // 消息体
+                        DLXTopology.DLX_EXCHANGE,             // 目标 exchange
+                        DLXTopology.TTL_ROUTING,              // routing key = ttl → 进 TTL_QUEUE
+                        MessageProperties.PERSISTENT_TEXT_PLAIN,
+                        msg.getBytes(StandardCharsets.UTF_8)
                 );
-
-                System.out.println(" [x] 下单成功，等待支付：'" + message + "'（10 秒后未支付将自动关单）");
+                System.out.println(" [x] 发往TTL队列: " + msg + "（5秒后过期进死信）");
             }
 
-            // 5. 保持进程不退出，等消息过期进入死信队列后由 Consumer 处理
-            //    这里用 sleep 仅为演示，真实应用是常驻服务
-            System.out.println(" [*] Producer 已发完，等 12 秒让消息过期进死信队列...");
-            Thread.sleep(12_000L);
+            // ============================================================
+            // 4. 往 MAXLEN_QUEUE 发 5 条消息：队列只放 3 条，后 2 条把队头挤成死信
+            // ============================================================
+            // x-max-length 行为：队列满后，新消息进来会把【队头】消息挤成死信
+            // 所以发的顺序是 1,2,3,4,5 → 最终队列里留 3,4,5；1,2 被挤进死信队列
+            for (int i = 1; i <= 5; i++) {
+                String msg = "maxlen消息-" + i;
+                ch.basicPublish(
+                        DLXTopology.DLX_EXCHANGE,             // 目标 exchange
+                        DLXTopology.MAXLEN_ROUTING,           // routing key = maxlen → 进 MAXLEN_QUEUE
+                        MessageProperties.PERSISTENT_TEXT_PLAIN,
+                        msg.getBytes(StandardCharsets.UTF_8)
+                );
+                System.out.println(" [x] 发往超长队列: " + msg + (i > 3 ? "（挤掉队头进死信）" : ""));
+            }
+
+            System.out.println(" [*] 发送完成。运行 Consumer 观察死信原因：");
+            System.out.println("    t≈5s  → TTL 队列 3 条全部死信（reason=expired）");
+            System.out.println("    立即  → 超长队列队头 2 条死信（reason=maxlen）");
+            Thread.sleep(1_000);
         }
     }
 }
