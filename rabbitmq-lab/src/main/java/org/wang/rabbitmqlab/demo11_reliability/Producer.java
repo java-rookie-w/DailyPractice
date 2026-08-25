@@ -84,6 +84,18 @@ public class Producer {
             );
             System.out.println("[x] 已发送一条不可路由消息（应触发 Return 回调）");
 
+            // 6. 发一条模拟业务失败的消息，消费端会 NACK 进死信队列（演示用）
+            AMQP.BasicProperties props3 = new AMQP.BasicProperties.Builder()
+                    .deliveryMode(2).messageId(UUID.randomUUID().toString()).contentType("text/plain").build();
+            channel.basicPublish(
+                    ReliabilityTopology.BIZ_EXCHANGE,
+                    ReliabilityTopology.BIZ_ROUTING,
+                    true,
+                    props3,
+                    "FAIL".getBytes(StandardCharsets.UTF_8)
+            );
+            System.out.println("[x] 已发送一条模拟消费端 NACK 的消息（应进死信队列）");
+
             // ⑥ 给异步回调一点时间打印（演示用；生产可走 waitForConfirmsOrDie 同步等）
             Thread.sleep(600);
             System.out.println("[x] 生产端发送完毕：Confirm + Return(mandatory) + 持久化 三段已就位");
