@@ -3,12 +3,13 @@ package org.wang.rabbitmqlab.demo08_stream;
 // RabbitMQ Java 客户端核心类
 import com.rabbitmq.client.Channel;              // 信道,所有 AMQP 操作的入口
 import com.rabbitmq.client.Connection;            // 到 Broker 的 TCP 连接
-import com.rabbitmq.client.ConnectionFactory;     // 用于创建连接的工厂类
+import org.wang.rabbitmqlab.common.ConnectionUtil;     // 用于创建连接的工厂类
 import com.rabbitmq.client.DeliverCallback;       // 消息投递回调接口,收到消息时触发
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;         // 字符编码,用于消息体转换
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -55,24 +56,20 @@ public class ReceiveLogsStreamFirst {
         System.out.println("ReceiveLogsStreamFirst(x-stream-offset = first)");
         System.out.println(" [i] 将从第一条消息开始消费\n");
 
-        // 1. 创建连接工厂,配置 Broker 的连接信息
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.6.132");          // Broker 的 IP 地址
-        factory.setPort(5672);                     // Broker 的 AMQP 端口
-        factory.setUsername("admin");              // 登录用户名
-        factory.setPassword("passw0rd");           // 登录密码
-        factory.setVirtualHost("/mirror");         // 虚拟主机
-
+        // 1. 建立连接:连接参数集中在 ConnectionUtil,改 Broker 只改一处
         // 2. 建立连接和信道(不用 try-with-resources,basicConsume 需要保持连接)
-        Connection connection = factory.newConnection();
+        Connection connection = ConnectionUtil.createConnection();
         Channel channel = connection.createChannel();
 
         // 3. 确保 stream 队列存在(和生产者声明一致)
         //    如果生产者已运行过,队列已存在,这里只是确认
         //    注意:第二次声明必须和第一次的参数完全一致,否则会报错
-        //    这里偷懒只用 x-queue-type 声明,实际生产环境应保持一致
-        channel.queueDeclare(STREAM_NAME, true, false, false,
-                Collections.singletonMap("x-queue-type", "stream"));
+        //    这里声明与生产者一致: x-queue-type / x-max-length-bytes / x-max-age
+        Map<String, Object> streamArgs = new HashMap<>();
+        streamArgs.put("x-queue-type", "stream");
+        streamArgs.put("x-max-length-bytes", 20_000_000_000L);
+        streamArgs.put("x-max-age", "7D");
+        channel.queueDeclare(STREAM_NAME, true, false, false, streamArgs);
 
         // ============================================================
         // 4. 设置 QoS prefetch(Stream 消费必须设置,否则报错)
