@@ -45,18 +45,18 @@ import java.util.Map;
  *    Producer
  *       │  按 TTL 档位贪心拆分，决定先发往哪个延迟队列
  *       ▼
- *    delay.10s.queue  (x-message-ttl=10000, x-dead-letter-exchange=delay.dlx)
+ *    order.cancel.relay.10s.queue  (x-message-ttl=10000, x-dead-letter-exchange=order.cancel.relay.dlx)
  *       │  过期(10s) → 死信
  *       ▼
- *    delay.dlx.exchange (direct)
+ *    order.cancel.relay.dlx (direct)
  *       │  按 routing key 路由：还要继续延迟就进下一个延迟队列，延迟完了进业务队列
  *       ▼
- *    delay.1s.queue   (x-message-ttl=1000,  x-dead-letter-exchange=delay.dlx)
+ *    order.cancel.relay.1s.queue   (x-message-ttl=1000,  x-dead-letter-exchange=order.cancel.relay.dlx)
  *       │  过期(1s) → 死信 → 再回 DLX → 进下一个 1s 队列 或 业务队列
  *       ▼
  *    ... 串联 N 次 ...
  *       ▼
- *    biz.queue  ← Consumer 消费 = 订单已超时 → 查状态关单
+ *    order.cancel.relay.execute.queue  ← Consumer 消费 = 订单已超时 → 查状态关单
  *
  *  关键：每个延迟队列都是【队列级 TTL】，队列里所有消息 TTL 相同 → 无队头阻塞。
  *       串联次数由目标延迟 / 档位决定，类似「找零钱」——用大档位尽量凑，剩余用小档位。
@@ -88,24 +88,24 @@ public class TtlDlxTopology {
 
     // ============================ 死信中转层 ============================
     // 所有延迟队列过期后都进这个死信交换机，按 routing key 决定下一步去向
-    static final String DLX_EXCHANGE = "delay.dlx.exchange";
+    static final String DLX_EXCHANGE = "order.cancel.relay.dlx";
 
     // ============================ 延迟队列档位 ============================
     // 档位1：10 秒延迟队列
-    static final String DELAY_10S_QUEUE  = "delay.10s.queue";
+    static final String DELAY_10S_QUEUE  = "order.cancel.relay.10s.queue";
     static final long   DELAY_10S_TTL     = 10_000L;
-    static final String ROUTING_10S       = "delay.10s";      // Producer → 10s 队列
-    static final String DLX_FROM_10S      = "from.10s";       // 10s 队列过期 → DLX（带剩余延迟信息）
+    static final String ROUTING_10S       = "order.cancel.relay.10s";      // Producer → 10s 队列
+    static final String DLX_FROM_10S      = "order.cancel.relay.from.10s"; // 10s 队列过期 → DLX（带剩余延迟信息）
 
     // 档位2：1 秒延迟队列（用来凑任意余数）
-    static final String DELAY_1S_QUEUE   = "delay.1s.queue";
+    static final String DELAY_1S_QUEUE   = "order.cancel.relay.1s.queue";
     static final long   DELAY_1S_TTL      = 1_000L;
-    static final String ROUTING_1S        = "delay.1s";       // Producer / 10s 队列 → 1s 队列
-    static final String DLX_FROM_1S       = "from.1s";        // 1s 队列过期 → DLX
+    static final String ROUTING_1S        = "order.cancel.relay.1s";       // Producer / 10s 队列 → 1s 队列
+    static final String DLX_FROM_1S       = "order.cancel.relay.from.1s";  // 1s 队列过期 → DLX
 
     // ============================ 业务层 ============================
-    static final String BIZ_QUEUE         = "biz.order.queue";   // 最终业务队列，消费者从这里消费
-    static final String ROUTING_BIZ       = "biz";                // 延迟用完 → 业务队列
+    static final String BIZ_QUEUE         = "order.cancel.relay.execute.queue";   // 最终业务队列，消费者从这里消费
+    static final String ROUTING_BIZ       = "order.cancel.relay.execute";         // 延迟用完 → 业务队列
 
     /**
      * 创建并返回一个 RabbitMQ 连接（委托给通用工具类）

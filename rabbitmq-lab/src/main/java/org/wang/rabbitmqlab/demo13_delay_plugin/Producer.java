@@ -4,6 +4,7 @@ package org.wang.rabbitmqlab.demo13_delay_plugin;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;                 // 信道，所有 AMQP 操作的入口
 import com.rabbitmq.client.Connection;              // 到 Broker 的 TCP 连接
+import org.wang.rabbitmqlab.common.ConnectionUtil;
 
 import java.nio.charset.StandardCharsets;           // 字符编码
 import java.time.LocalTime;
@@ -16,10 +17,10 @@ import java.time.LocalTime;
  * ============================================================
  *  消息流向：
  *  ============================================================
- *  Producer → order.delay.exchange(x-delayed-message)
+ *  Producer → order.cancel.schedule.exchange(x-delayed-message)
  *               │  插件按 x-delay header 延迟，到点才投递
  *               ▼
- *             order.delay.queue → Consumer（延迟到点消费 → 查状态关单）
+ *             order.cancel.schedule.queue → Consumer（延迟到点消费 → 查状态关单）
  *
  * ============================================================
  *  关键点（生产落地）：
@@ -37,7 +38,7 @@ import java.time.LocalTime;
 public class Producer {
 
     public static void main(String[] args) throws Exception {
-        try (Connection conn = DelayPluginTopology.createConnection();
+        try (Connection conn = ConnectionUtil.createConnection();
              Channel ch = conn.createChannel()) {
 
             // 1. 声明拓扑（幂等）

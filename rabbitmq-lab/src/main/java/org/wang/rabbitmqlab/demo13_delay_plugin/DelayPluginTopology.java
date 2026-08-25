@@ -41,10 +41,10 @@ import org.wang.rabbitmqlab.common.ConnectionUtil;       // 用于创建连接�
  *  Producer
  *     │  basicPublish + x-delay header（每条独立延迟时长）
  *     ▼
- *  order.delay.exchange (x-delayed-message 插件交换机)
+ *  order.cancel.schedule.exchange (x-delayed-message 插件交换机)
  *     │  插件内部按 x-delay 延迟，到点才把消息投给绑定的队列
  *     ▼
- *  order.delay.queue  ← 绑定 order.delay.exchange
+ *  order.cancel.schedule.queue  ← 绑定 order.cancel.schedule.exchange
  *     │
  *     ▼
  *  Consumer（消费 = 订单已超时 → 查订单状态 → 未支付就关单）
@@ -76,19 +76,12 @@ import org.wang.rabbitmqlab.common.ConnectionUtil;       // 用于创建连接�
 public class DelayPluginTopology {
 
     // ============================ 资源命名 ============================
-    static final String DELAY_EXCHANGE = "order.delay.exchange";   // 延迟交换机（x-delayed-message 插件类型）
-    static final String DELAY_QUEUE    = "order.delay.queue";      // 延迟队列（消费者直接从这里消费）
-    static final String DELAY_ROUTING  = "order.delay";            // 路由键
+    static final String DELAY_EXCHANGE = "order.cancel.schedule.exchange";   // 订单取消调度交换机（x-delayed-message 插件类型）
+    static final String DELAY_QUEUE    = "order.cancel.schedule.queue";      // 订单取消调度队列（消费者从这里取到期未支付订单）
+    static final String DELAY_ROUTING  = "order.cancel.schedule";            // 路由键
 
     // 延迟交换机的插件类型名（RabbitMQ 内置交换机类型枚举里没有，用字符串）
     static final String X_DELAYED_MESSAGE_TYPE = "x-delayed-message";
-
-    /**
-     * 创建并返回一个 RabbitMQ 连接（委托给通用工具类）
-     */
-    static Connection createConnection() throws Exception {
-        return ConnectionUtil.createConnection();
-    }
 
     /**
      * 声明整个延迟拓扑：1 个插件交换机 + 1 个队列 + 1 个绑定
@@ -105,13 +98,13 @@ public class DelayPluginTopology {
         // 2) 声明延迟队列：普通持久化队列，消费者直接从这里消费（不需要 DLX 参数）
         ch.queueDeclare(DELAY_QUEUE, true, false, false, null);
 
-        // 3) 绑定：延迟队列按 order.delay 绑到延迟交换机
-        //    Producer 发消息 routing key = order.delay，延迟到点后投递到这里
+        // 3) 绑定：订单取消调度队列按 order.cancel.schedule 绑到订单取消调度交换机
+        //    Producer 发消息 routing key = order.cancel.schedule，延迟到点后投递到这里
         ch.queueBind(DELAY_QUEUE, DELAY_EXCHANGE, DELAY_ROUTING);
     }
 
     public static void main(String[] args) throws Exception {
-        try (Connection conn = createConnection();
+        try (Connection conn = ConnectionUtil.createConnection();
              Channel ch = conn.createChannel()) {
             declareTopology(ch);
             System.out.println("[拓扑] 延迟插件拓扑就绪：");

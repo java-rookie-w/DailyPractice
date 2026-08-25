@@ -21,11 +21,11 @@ import java.time.LocalTime;
  *  Producer
  *     │  目标 15s = 10s ×1 + 1s ×5；带 header「remaining」记录剩余延迟
  *     ▼  发往 10s 队列
- *  delay.10s.queue (TTL=10s, 过期→DLX)
+ *  order.cancel.relay.10s.queue (TTL=10s, 过期→DLX)
  *     ▼  DLX 中转：header remaining=5s 还要继续延迟 → 转 1s 队列
- *  delay.1s.queue  (TTL=1s, 过期→DLX)
+ *  order.cancel.relay.1s.queue  (TTL=1s, 过期→DLX)
  *     ▼  DLX 中转：remaining 减到 0 → 进业务队列
- *  biz.queue → Consumer 关单
+ *  order.cancel.relay.execute.queue → Consumer 关单
  *
  * ============================================================
  *  拆分逻辑（贪心，类似找零钱）：

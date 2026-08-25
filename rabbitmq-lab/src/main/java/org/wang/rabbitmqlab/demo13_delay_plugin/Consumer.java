@@ -5,6 +5,7 @@ import com.rabbitmq.client.Channel;                 // 信道，所有 AMQP 操�
 import com.rabbitmq.client.Connection;              // 到 Broker 的 TCP 连接
 import com.rabbitmq.client.DefaultConsumer;         // 消费者默认实现（可重写回调）
 import com.rabbitmq.client.Envelope;                // 消息信封（含 deliveryTag、routing key 等）
+import org.wang.rabbitmqlab.common.ConnectionUtil;
 
 import java.nio.charset.StandardCharsets;           // 字符编码
 import java.time.LocalTime;
@@ -50,7 +51,7 @@ public class Consumer {
 
     public static void main(String[] args) throws Exception {
         // 1. 建立连接和信道
-        try (Connection conn = DelayPluginTopology.createConnection();
+        try (Connection conn = ConnectionUtil.createConnection();
              Channel ch = conn.createChannel()) {
 
             // 2. 声明拓扑（幂等）
