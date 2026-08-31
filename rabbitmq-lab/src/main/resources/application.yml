@@ -1,22 +1,41 @@
+server:
+  port: 8081
 spring:
   application:
     name: rabbitmq-lab
-
+  profiles:
+    # ============================ 关键澄清 ============================
+    # active 不是"新增一个配置文件"，而是给本次运行"贴标签"。
+    # 标签的作用有两个（本工程只用到第一个）：
+    #   1) 当 Bean 开关：@Profile("xxx") 的 Bean 只有标签命中才注册。
+    #      usage_message / sender / receiver / hello-world 全是纯标签名，
+    #      磁盘上不需要存在 application-xxx.yml（resources/ 下确实只有本文件一个）。
+    #   2) 加载 application-{profile}.yml：需要你自己新建该文件才会生效。
+    #
+    # 当前值 usage_message 是官方教程的"保险丝"：
+    #   裸跑（不传参数）→ 只打印用法说明后退出，不会静默无事发生。
+    # 想真正跑 tut1，在 IDE 的 Run/Debug Configurations -> Program arguments 填：
+    #   --spring.profiles.active=hello-world,sender,receiver
+    #   （hello-world 装载 Tut1Config，sender 注册发送者，receiver 注册接收者，三者缺一不可）
+    # 不想每次传参数的话，可直接把下面这行改成：
+    #   active: hello-world,sender,receiver
+    # =================================================================
+#    active: usage_message
+    active: hello-world,sender,receiver
   rabbitmq:
     # RabbitMQ connection settings
     host: 192.168.6.132
     port: 5672
     username: admin
     password: passw0rd
-    virtual-host: /mirror
-    
+    # 虚拟主机：已在 broker 上创建好，保持不动。
+    # 注意 Spring AMQP 不会自动创建 vhost，这里写错会报 404 NOT_FOUND - no access to vhost。
+    # 原生 demo（ConnectionUtil）用的是 /mirror，两套代码互相隔离，队列不会串。
+    virtual-host: /springdemo
+
     # Connection configuration
     connection-timeout: 10000ms
-    
-    # Publisher settings
-    publisher-confirms: true
-    publisher-returns: true
-    
+
     # Listener configuration
     listener:
       simple:
@@ -35,5 +54,14 @@ spring:
 logging:
   level:
     root: INFO
+    # 打开 AMQP 的 DEBUG，能看到连接、通道、队列声明、消息收发的细节，学习阶段很有用
     org.springframework.amqp: DEBUG
     org.wang.rabbitmqlab: DEBUG
+
+# 自定义配置（不是 Spring 内置项，是这套教程自己读的）
+# 含义：应用启动后存活多久再自动关闭，给收发消息留出时间窗口。
+# 由 RabbitAmqpTutorialsRunner 通过 @Value("${tutorial.client.duration:0}") 读取。
+# 单位毫秒，此处 10 秒；若设为 0，应用会瞬间退出、什么都来不及做。
+tutorial:
+  client:
+    duration: 10000
