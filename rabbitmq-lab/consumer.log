@@ -1,0 +1,13 @@
+ [*] 等待消费死信队列 order.close.queue（按 Ctrl+C 退出）
+ [x] 收到死信消息（订单已超时）：'ORDER-001'
+     → 查询订单 ORDER-001 状态：UNPAID
+     → 执行关单：UPDATE order SET status='CANCEL' WHERE id='ORDER-001' AND status='UNPAID'
+     → 关单成功（受影响行数=1）
+ [x] 收到死信消息（订单已超时）：'ORDER-002'
+     → 查询订单 ORDER-002 状态：UNPAID
+     → 执行关单：UPDATE order SET status='CANCEL' WHERE id='ORDER-002' AND status='UNPAID'
+     → 关单成功（受影响行数=1）
+ [x] 收到死信消息（订单已超时）：'ORDER-003'
+     → 查询订单 ORDER-003 状态：UNPAID
+     → 执行关单：UPDATE order SET status='CANCEL' WHERE id='ORDER-003' AND status='UNPAID'
+     → 关单成功（受影响行数=1）

@@ -29,7 +29,7 @@ public class Tut1Sender {
 
     /**
      * 定时发送：容器启动后延迟 500ms 发第一条，之后每次结束后 1000ms 再发（fixedDelay）。
-     * 需要主类 RabbitAmqpTutorialsApplication 上的 @EnableScheduling 才会生效。
+     * 需要主类 SpringDemoApplication 上的 @EnableScheduling 才会生效。
      */
     @Scheduled(fixedDelay = 1000, initialDelay = 500)
     public void send() {

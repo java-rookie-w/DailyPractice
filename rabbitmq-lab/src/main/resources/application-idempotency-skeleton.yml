@@ -1,0 +1,26 @@
+# ============================================================================
+# profile: idempotency-skeleton —— 练习版骨架（idempotency_skeleton 包）专用。
+# 内容与 application-idempotency.yml 完全一致：队列名在代码常量里带 .sk 后缀，
+# 两边互不干扰。
+# ============================================================================
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        # 硬冲突项：helloworld 要 auto，本 demo 必须 manual
+        acknowledge-mode: manual
+        prefetch: 1
+        # 演示阶段先单消费者，消息顺序才是确定的，日志好对照
+        concurrency: 1
+        max-concurrency: 1
+        retry:
+          # 手动 ACK 下本 demo 在 catch 里自己 nack，Spring 重试不参与，先关掉避免误判日志
+          enabled: false
+
+# H2 内存库不需要配置 URL —— Boot 检测到 classpath 上有 h2 + starter-jdbc 会自动建
+# 内嵌数据源，并执行 schema.sql 建去重表。
+# 想亲眼看表里的数据：工程带着 web + h2，浏览器直接开
+#   http://localhost:8081/h2-console    JDBC URL 填 jdbc:h2:mem:default，用户名 sa，密码空
+lab:
+  client:
+    duration: 60000
