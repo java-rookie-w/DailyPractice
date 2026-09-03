@@ -1,0 +1,34 @@
+# ============================================================================
+# profile: reliability —— 仅当 --spring.profiles.active 带 reliability 时加载。
+# 与 application.yml 的关系：主文件永远加载；本文件后加载、优先级更高，
+# 同名 key 覆盖，其余合并。
+# ============================================================================
+spring:
+  rabbitmq:
+    # none(默认) / correlated(异步回调，推荐) / simple(同步阻塞，生产禁用)
+    publisher-confirm-type: correlated
+
+    template:
+      # 关键！不开这条，路由失败被静默丢弃，ReturnsCallback 永远不触发
+      mandatory: true
+
+    listener:
+      simple:
+        # 硬冲突项：helloworld 要 auto，reliability 必须 manual
+        acknowledge-mode: manual
+        prefetch: 1
+        # 演示阶段先单消费者，消息顺序才是确定的，日志好对照
+        concurrency: 1
+        max-concurrency: 1
+        # 手动 ACK 下 requeue 由自己的 basicNack 决定；留着做 AUTO 模式对照时用
+        default-requeue-rejected: false
+        retry:
+          # 手动 ACK 下 Spring 的重试只在 listener 抛异常时介入；本 demo 在 catch 里
+          # 自己 nack，重试根本不参与（也不会替你 ack）。先关掉，避免误判日志，
+          # 等专门做"Spring 重试 vs 死信"对比时再打开。
+          enabled: false
+
+# 官方教程的自动退出计时器：基础配置 10s，confirm 回调还没回来应用就关了，这里放大
+lab:
+  client:
+    duration: 60000

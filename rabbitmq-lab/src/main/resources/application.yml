@@ -1,30 +1,47 @@
+# ============================================================================
+# 基础层配置：无论激活哪个 profile 都会加载，放"所有 demo 共用"的东西。
+# 各 demo 的差异化配置放 application-{profile}.yml（后加载、优先级更高，
+# 同名 key 覆盖本文件，其余合并）。跑哪个 demo 的说明见启动类注释或
+# --spring.profiles.active=usage_message 打印的对照表。
+# ============================================================================
+
+server:
+  port: 8081
+
 spring:
   application:
     name: rabbitmq-lab
-
+  profiles:
+    # 不传参数时的默认值。设为 usage_message = 官方教程的保险丝：
+    # 裸跑只打印用法说明后退出，不会静默无事发生。
+    # 切换 demo：IDE -> Run/Debug Configurations -> Program arguments
+    #   --spring.profiles.active=<profile>
+    # ⚠️ 不要同时激活同一 demo 的标准版和 -skeleton 版，
+    #    两套 @Bean 方法名相同，会抛 ConflictingBeanDefinitionException。
+    # ⚠️ profile 标签有两层含义：① Bean 开关（@Profile 命中即注册，
+    #    磁盘上无需对应 yml，如 sender/receiver）；② 加载对应的
+    #    application-{profile}.yml（存在才生效）。
+#    active: reliability
+#    active: reliability-skeleton
+    active: idempotency-skeleton
   rabbitmq:
-    # RabbitMQ connection settings
     host: 192.168.6.132
     port: 5672
     username: admin
     password: passw0rd
-    virtual-host: /mirror
-    
-    # Connection configuration
+    # 虚拟主机：已在 broker 上创建好，保持不动。
+    # Spring AMQP 不会自动创建 vhost，写错会报 404 NOT_FOUND - no access to vhost。
+    # 原生 demo（ConnectionUtil）用的是 /mirror，两套代码互相隔离，队列不会串。
+    virtual-host: /springdemo
     connection-timeout: 10000ms
-    
-    # Publisher settings
-    publisher-confirms: true
-    publisher-returns: true
-    
-    # Listener configuration
     listener:
       simple:
-        # Consumer prefetch count (balance between throughput and fair distribution)
+        # 消费端预取数：1 = 逐条投递，公平分发（学习阶段日志好对照）
         prefetch: 1
-        # Acknowledge mode: AUTO (recommended), MANUAL, or NONE
+        # 自动 ACK：helloworld 等简单 demo 的默认；
+        # reliability / idempotency 在各自的 profile 文件里覆盖成 manual
         acknowledge-mode: auto
-        # Whether to retry rejected messages
+        # 监听端本地重试（listener 抛异常时介入，与手动 ACK 的 nack 互不相干）
         retry:
           enabled: true
           initial-interval: 1000ms
@@ -35,5 +52,16 @@ spring:
 logging:
   level:
     root: INFO
+    # 打开 AMQP 的 DEBUG，能看到连接、通道、队列声明、消息收发的细节，学习阶段很有用
     org.springframework.amqp: DEBUG
     org.wang.rabbitmqlab: DEBUG
+
+# ----------------------------------------------------------------------------
+# 自定义配置（非 Spring 内置项）：应用启动后存活多久再自动关闭，
+# 给收发消息留出时间窗口。由 LabRunner 通过 @Value("${lab.client.duration:0}") 读取。
+# 单位毫秒，此处 10 秒；设为 0 则应用瞬间退出，什么都来不及做。
+# 需要更长观察窗口的 demo（如 reliability 等 60000）在各自 profile 文件里覆盖。
+# ----------------------------------------------------------------------------
+lab:
+  client:
+    duration: 10000

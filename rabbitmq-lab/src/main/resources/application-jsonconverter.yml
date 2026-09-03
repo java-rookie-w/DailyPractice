@@ -1,0 +1,7 @@
+# ============================================================================
+# profile: jsonconverter —— 仅当 --spring.profiles.active 带 jsonconverter 时加载。
+# converter demo 不涉及 confirm / manual-ack，只需要足够的存活时间看几轮收发。
+# ============================================================================
+lab:
+  client:
+    duration: 30000
