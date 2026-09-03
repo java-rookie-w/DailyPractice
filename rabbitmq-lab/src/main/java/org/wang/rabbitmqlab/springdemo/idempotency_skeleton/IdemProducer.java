@@ -37,6 +37,7 @@ public class IdemProducer {
      */
     public void sendWithId(String msgId, String body) {
         // TODO 1
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, body, persistentWithId(msgId), new CorrelationData(msgId));
     }
 
     /**
@@ -49,6 +50,11 @@ public class IdemProducer {
     public void produce() {
         // TODO 2
         log.info("================ 幂等 demo(骨架) 第 {} 轮 ================", ++round);
+        // a) 连发 3 次同一 id 的正常消息
+        String dupId = "dup-001";
+        for (int i = 1; i <= 3; i++) {
+            sendWithId(dupId, "正常消息 #" + i);
+        }
     }
 
     // 小工具（已写好，直接用）：持久化 + messageId

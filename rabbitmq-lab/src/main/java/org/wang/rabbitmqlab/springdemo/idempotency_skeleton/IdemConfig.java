@@ -5,6 +5,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * 【练习版】幂等 demo 的拓扑与 Bean 装配。
@@ -40,12 +41,26 @@ public class IdemConfig {
      // }
      * JdbcTemplate 不用自己建：classpath 上有 starter-jdbc + H2，Boot 自动配置就给了一个。
      */
-    // @Bean
-    // public DedupStore dedupStore(...) { ... }
+     @Bean
+     public DedupStore dedupStore(JdbcTemplate jdbcTemplate) {
+         return new JdbcDedupStore(jdbcTemplate);
+     }
 
     /** TODO 2：声明交换机（direct + 持久化，名字用常量 EXCHANGE） */
+    @Bean
+    public DirectExchange directExchange() {
+        return ExchangeBuilder.directExchange(EXCHANGE).durable(true).build();
+    }
 
     /** TODO 3：声明队列（持久化即可，本 demo 不配死信） */
+    @Bean
+    public Queue queue() {
+        return QueueBuilder.durable(QUEUE).build();
+    }
 
     /** TODO 4：把队列绑到交换机上（routing key 用常量 ROUTING_KEY） */
+    @Bean
+    public Binding binding() {
+        return BindingBuilder.bind(queue()).to(directExchange()).with(ROUTING_KEY);
+    }
 }

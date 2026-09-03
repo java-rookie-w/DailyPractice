@@ -45,14 +45,14 @@ public class ReliabilityProducer {
         //    路由失败时消息被丢弃，confirm 照样回 ack=true（见 TODO 4 的现象）。
         //
         // 写法：
-        // this.rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
-        //     String id = correlationData != null ? correlationData.getId() : "null";
-        //     if (ack) {
-        //         log.info("[Confirm] ack=true   id={}", id);
-        //     } else {
-        //         log.error("[Confirm] ack=false  id={} cause={}", id, cause);
-        //     }
-        // });
+         this.rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+             String id = correlationData != null ? correlationData.getId() : "null";
+             if (ack) {
+                 log.info("[Confirm] ack=true   id={}", id);
+             } else {
+                 log.error("[Confirm] ack=false  id={} cause={}", id, cause);
+             }
+         });
 
         // ========== TODO 2：注册 Return 回调 ==========
         // 回答的是另一个问题："这条消息进了至少一个队列吗？"
@@ -66,12 +66,12 @@ public class ReliabilityProducer {
         //    所以 Return 触发时，Confirm **依然** 是 ack=true —— 这就是"confirm 全绿但消息丢了"。
         //
         // 写法：
-        // this.rabbitTemplate.setReturnsCallback(returned -> {
-        //     log.error("[Return] 消息被退回！replyCode={} replyText={} exchange={} rk={} body={}",
-        //             returned.getReplyCode(), returned.getReplyText(),
-        //             returned.getExchange(), returned.getRoutingKey(),
-        //             returned.getMessage().getBody());
-        // });
+         this.rabbitTemplate.setReturnsCallback(returned -> {
+             log.error("[Return] 消息被退回！replyCode={} replyText={} exchange={} rk={} body={}",
+                     returned.getReplyCode(), returned.getReplyText(),
+                     returned.getExchange(), returned.getRoutingKey(),
+                     returned.getMessage().getBody());
+         });
     }
 
     // ================== 发送方法 ==================
@@ -89,6 +89,9 @@ public class ReliabilityProducer {
      */
     public void sendOk(String body) {
         // TODO 3
+        String id = UUID.randomUUID().toString();
+        MessagePostProcessor mpp = persistentWithId(id);
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, body, mpp, new CorrelationData(id));
     }
 
     /**
@@ -103,6 +106,9 @@ public class ReliabilityProducer {
      */
     public void sendUnroutable(String body) {
         // TODO 4
+        String id = UUID.randomUUID().toString();
+        MessagePostProcessor mpp = persistentWithId(id);
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY + ".typo", body, mpp, new CorrelationData(id));
     }
 
     /**
@@ -120,6 +126,9 @@ public class ReliabilityProducer {
      */
     public void sendFail(String body) {
         // TODO 5
+        String id = UUID.randomUUID().toString();
+        MessagePostProcessor mpp = persistentWithId(id);
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, body, mpp, new CorrelationData(id));
     }
 
     // ================== 触发器 ==================
@@ -140,6 +149,10 @@ public class ReliabilityProducer {
     @Scheduled(initialDelay = 1000, fixedDelay = 20000)
     public void produce() {
         // TODO 6
+        sendOk("order-1");
+        sendOk("order-2");
+        sendFail("order-3 FAIL");
+        sendUnroutable("order-4 这条路由不到");
     }
 
     // ================== 小工具（已写好，直接用） ==================

@@ -29,18 +29,35 @@ public class IdemConsumer {
         String body = new String(message.getBody(), StandardCharsets.UTF_8);
 
         log.info("[Consumer] 收到 tag={} msgId={} body={}", tag, msgId, body);
+        try {
+            // ======== TODO 1：幂等占位（false = 重复消息 → ack 后 return） ========
+            if (!dedupStore.tryMark(msgId)) {
+                log.info("[Consumer] 消息重复，msgId={}", msgId);
+                channel.basicAck(tag, false);
+                return;
+            } else {
+                // ======== TODO 3：成功 → channel.basicAck(tag, false) ========
+                log.info("[Consumer] 消息处理成功，msgId={}", msgId);
+                channel.basicAck(tag, false);
+            }
 
-        // ======== TODO 1：幂等占位（false = 重复消息 → ack 后 return） ========
+            // ======== TODO 2：业务处理（body 含 "FAIL" 抛异常） ========
+            if (body.contains("FAIL")) {
+                throw new RuntimeException("模拟业务异常");
+            }
 
-        // ======== TODO 2：业务处理（body 含 "FAIL" 抛异常） ========
-
-        // ======== TODO 3：成功 → channel.basicAck(tag, false) ========
+        } catch (Exception e) {
+            //   a) dedupStore.release(msgId)   ← 容易漏的一步
+            //   b) channel.basicNack(tag, false, false)
+            dedupStore.release(msgId);
+            channel.basicNack(tag, false, false);
+        }
 
         // ======== TODO 4：失败 catch 里 ========
         //   a) dedupStore.release(msgId)   ← 容易漏的一步
         //   b) channel.basicNack(tag, false, false)
 
         // TODO 写完之前先让编译通过：
-        channel.basicAck(tag, false);
+//        channel.basicAck(tag, false);
     }
 }

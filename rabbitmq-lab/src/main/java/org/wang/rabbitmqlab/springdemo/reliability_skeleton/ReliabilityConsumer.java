@@ -52,11 +52,11 @@ public class ReliabilityConsumer {
             // 都会导致同一条消息被重投。业务必须能扛住重复。
             //
             // 写法：
-            // if (msgId != null && !processedIds.add(msgId)) {
-            //     log.warn("[Consumer] 重复消息，直接丢弃 tag={} msgId={}", tag, msgId);
-            //     channel.basicAck(tag, false);
-            //     return;
-            // }
+             if (msgId != null && !processedIds.add(msgId)) {
+                 log.warn("[Consumer] 重复消息，直接丢弃 tag={} msgId={}", tag, msgId);
+                 channel.basicAck(tag, false);
+                 return;
+             }
             //
             // ⚠️ add() 本身就是"不存在则插入并返回 true"，一步原子，别拆成 contains + add。
 
@@ -64,20 +64,20 @@ public class ReliabilityConsumer {
             // 约定：body 含 "FAIL" 就抛运行时异常，模拟业务失败（对应 Producer 的 sendFail）
             //
             // 写法：
-            // if (body.contains("FAIL")) {
-            //     throw new RuntimeException("模拟业务失败: " + body);
-            // }
-            // log.info("[Consumer] 业务处理完成 body={}", body);
+             if (body.contains("FAIL")) {
+                 throw new RuntimeException("模拟业务失败: " + body);
+             }
+             log.info("[Consumer] 业务处理完成 body={}", body);
 
             // ========== TODO 3：成功 -> 手动 ack ==========
             // 第二个参数 multiple=false：只确认这一条。
             // 批量 true 会把"当前 tag 及之前所有未确认消息"一起确认，用错会误确认别人的消息。
             //
             // 写法：
-            // channel.basicAck(tag, false);
+             channel.basicAck(tag, false);
 
             // TODO 1~3 写完之前，让编译通过：
-            channel.basicAck(tag, false);
+//            channel.basicAck(tag, false);
 
         } catch (Exception e) {
             log.error("[Consumer] 处理失败 tag={} msgId={} err={}", tag, msgId, e.getMessage());
@@ -94,8 +94,8 @@ public class ReliabilityConsumer {
             //      processedIds.remove(msgId);
             //
             // 写法：
-            // processedIds.remove(msgId);
-            // channel.basicNack(tag, false, false);
+//             processedIds.remove(msgId);
+//             channel.basicNack(tag, false, false);
 
             // TODO 4 写完之前，让编译通过：
             processedIds.remove(msgId);

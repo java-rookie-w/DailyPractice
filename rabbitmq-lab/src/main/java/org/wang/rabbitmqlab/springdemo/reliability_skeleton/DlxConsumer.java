@@ -32,8 +32,8 @@ public class DlxConsumer {
         //   time   —— 第一次死信的时间
         //
         // 写法：
-        // Object xDeath = message.getMessageProperties().getHeaders().get("x-death");
-        // log.warn("[DLX] 收到死信 body={} x-death={}", body, xDeath);
+         Object xDeath = message.getMessageProperties().getHeaders().get("x-death");
+         log.warn("[DLX] 收到死信 body={} x-death={}", body, xDeath);
 
         // ========== TODO 2：补偿动作 ==========
         // 生产上的三板斧（挑一个写注释即可，demo 阶段打印出来就算完成）：

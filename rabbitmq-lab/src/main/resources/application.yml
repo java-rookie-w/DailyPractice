@@ -21,7 +21,9 @@ spring:
     # ⚠️ profile 标签有两层含义：① Bean 开关（@Profile 命中即注册，
     #    磁盘上无需对应 yml，如 sender/receiver）；② 加载对应的
     #    application-{profile}.yml（存在才生效）。
-    active: reliability
+#    active: reliability
+#    active: reliability-skeleton
+    active: idempotency-skeleton
   rabbitmq:
     host: 192.168.6.132
     port: 5672

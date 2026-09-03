@@ -87,31 +87,32 @@ public class ReliabilityConfig {
     // 如果 reliability.dlx.exchange 没被声明，nack(requeue=false) 的消息会**直接消失**，
     // 既不在原队列、也不在任何死信队列里，日志上什么都不显示。
 
-    /**
-     * TODO 1：声明死信交换机（direct + 持久化，名字用常量 DLX_EXCHANGE）
-     * 提示：照抄 directExchange() 的写法，把常量换成 DLX_EXCHANGE。
-     */
-    // @Bean
-    // public DirectExchange dlxExchange() {
-    //     return ...
-    // }
 
     /**
-     * TODO 2：声明死信队列（持久化即可，不要再给它配 deadLetterExchange，
+     * 1：声明死信交换机（direct + 持久化，名字用常量 DLX_EXCHANGE）
+     * 提示：照抄 directExchange() 的写法，把常量换成 DLX_EXCHANGE。
+     */
+     @Bean
+     public DirectExchange dlxExchange() {
+         return ExchangeBuilder.directExchange(DLX_EXCHANGE).durable(true).build();
+     }
+
+    /**
+     * 2：声明死信队列（持久化即可，不要再给它配 deadLetterExchange，
      *         否则死信还能再死信一次，形成循环）
      * 提示：QueueBuilder.durable(DLX_QUEUE).build();
      */
-    // @Bean
-    // public Queue dlq() {
-    //     return ...
-    // }
+     @Bean
+     public Queue dlq() {
+         return QueueBuilder.durable(DLX_QUEUE).build();
+     }
 
     /**
-     * TODO 3：把死信队列绑到死信交换机上，routing key 用 DLX_ROUTING_KEY
+     * 3：把死信队列绑到死信交换机上，routing key 用 DLX_ROUTING_KEY
      * 提示：BindingBuilder.bind(dlq()).to(dlxExchange()).with(DLX_ROUTING_KEY);
      */
-    // @Bean
-    // public Binding dlxBinding() {
-    //     return ...
-    // }
+     @Bean
+     public Binding dlxBinding() {
+         return BindingBuilder.bind(dlq()).to(dlxExchange()).with(DLX_ROUTING_KEY);
+     }
 }

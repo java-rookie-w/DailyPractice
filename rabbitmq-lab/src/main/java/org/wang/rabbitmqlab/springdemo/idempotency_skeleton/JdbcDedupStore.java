@@ -33,7 +33,12 @@ public class JdbcDedupStore implements DedupStore {
     @Override
     public boolean tryMark(String msgId) {
         // TODO 1
-        return false;
+         try {
+             jdbc.update("INSERT INTO dedup_record (msg_id) VALUES (?)", msgId);
+             return true;                     // 插入成功 = 第一次
+         } catch (DuplicateKeyException e) {
+             return false;                    // 撞唯一索引 = 重复
+         }
     }
 
     // ======== TODO 2：release ========
@@ -45,5 +50,6 @@ public class JdbcDedupStore implements DedupStore {
     @Override
     public void release(String msgId) {
         // TODO 2
+        jdbc.update("DELETE FROM dedup_record WHERE msg_id = ?", msgId);
     }
 }
