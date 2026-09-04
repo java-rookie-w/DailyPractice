@@ -24,6 +24,11 @@ public class JsonProducer {
 
     public JsonProducer(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+        // 启动自检：验证"一个 @Bean 被自动装进 RabbitTemplate"真的生效了。
+        // 没生效的话这里会打出 SimpleMessageConverter（说明有多个 MessageConverter Bean，
+        // getIfUnique() 拿不到唯一实例，自动装配静默失效），发 Order 就会抛异常。
+        log.info("[自检   ] RabbitTemplate 的 converter = {}",
+                rabbitTemplate.getMessageConverter().getClass().getSimpleName());
     }
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)

@@ -28,5 +28,8 @@ public class DelayConsumer {
         //   message.getMessageProperties().getHeaders().get("x-death")
         // 拿到达时刻对照发送时刻，队列级(精确10s)和消息级(A 被堵到 8s)的差别就一目了然
         // TODO 1
+        String arriveTime = LocalTime.now().format(HHMMSS);
+        Object xDeath = message.getMessageProperties().getHeaders().get("x-death");
+        log.info("[Consumer] 到达时刻={} body={} x-death={}", arriveTime, body, xDeath);
     }
 }

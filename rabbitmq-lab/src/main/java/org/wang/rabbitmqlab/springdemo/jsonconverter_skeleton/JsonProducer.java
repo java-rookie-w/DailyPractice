@@ -21,6 +21,10 @@ public class JsonProducer {
 
     public JsonProducer(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+        // 启动自检：验证"一个 @Bean 被自动装进 RabbitTemplate"真的生效了。
+        // 打出 SimpleMessageConverter = 自动装配失效（有多个 MessageConverter Bean）。
+        log.info("[自检   ] RabbitTemplate 的 converter = {}",
+                rabbitTemplate.getMessageConverter().getClass().getSimpleName());
     }
 
     /**
@@ -35,5 +39,8 @@ public class JsonProducer {
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     public void produce() {
         // TODO 1
+        Order order = new Order("ORDER-" + (++seq), "iPhone 17", 2);
+        rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, order);
+        log.info("[Producer] 发出对象 {}", order);
     }
 }
