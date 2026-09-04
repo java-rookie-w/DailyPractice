@@ -23,7 +23,9 @@ spring:
     #    application-{profile}.yml（存在才生效）。
 #    active: reliability
 #    active: reliability-skeleton
-    active: idempotency-skeleton
+#    active: idempotency-skeleton
+#    active: delay-skeleton
+    active: jsonconverter-skeleton
   rabbitmq:
     host: 192.168.6.132
     port: 5672

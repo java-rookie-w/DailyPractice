@@ -16,12 +16,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * 真实生产的表一般是：
  *   CREATE TABLE dedup_record (
- *     msg_id VARCHAR(64) NOT NULL,
- *     biz_no VARCHAR(64) NOT NULL,          -- 冗余业务单号，排查用
- *     status TINYINT,                       -- 0 处理中 / 1 成功
+ *     biz_key  VARCHAR(64) NOT NULL,        -- 业务键：订单号 + 事件类型
+ *     biz_no   VARCHAR(64) NOT NULL,        -- 冗余业务单号，排查用
+ *     status   TINYINT,                     -- 0 处理中 / 1 成功
  *     created_at DATETIME DEFAULT NOW(),
- *     UNIQUE KEY uk_msg_id (msg_id)
+ *     UNIQUE KEY uk_biz_key (biz_key)
  *   );
+ *
+ * ⚠️ 前提：**这张表必须和业务表在同一个库**，这样占位和业务更新才能进同一个事务
+ *    （见 IdemOrderService）。分库放就没法原子了。
  */
 public class JdbcDedupStore implements DedupStore {
 
@@ -33,20 +36,27 @@ public class JdbcDedupStore implements DedupStore {
         this.jdbc = jdbc;
     }
 
+    /**
+     * 一步原子占位：INSERT 成功 = 第一次；撞唯一索引 = 重复。
+     * 撞唯一索引是**正常业务分支**，不是错误，不要打 error 日志。
+     */
     @Override
-    public boolean tryMark(String msgId) {
+    public boolean tryMark(String bizKey) {
         try {
-            jdbc.update("INSERT INTO dedup_record (msg_id) VALUES (?)", msgId);
+            jdbc.update("INSERT INTO dedup_record (biz_key) VALUES (?)", bizKey);
             return true;
         } catch (DuplicateKeyException e) {
-            // 撞唯一索引 = 这个 id 已经有人占了 = 重复消息。这是"正常业务分支"，不是错误。
             return false;
         }
     }
 
+    /**
+     * 归还占位。同库同事务的方案里用不到（失败靠回滚），
+     * 保留在这里是为了对照 Redis / 跨库方案 —— 那两种必须调它。
+     */
     @Override
-    public void release(String msgId) {
-        int rows = jdbc.update("DELETE FROM dedup_record WHERE msg_id = ?", msgId);
-        log.debug("[Dedup ] release msgId={} 删除 {} 行", msgId, rows);
+    public void release(String bizKey) {
+        int rows = jdbc.update("DELETE FROM dedup_record WHERE biz_key = ?", bizKey);
+        log.debug("[Dedup ] release bizKey={} 删除 {} 行", bizKey, rows);
     }
 }

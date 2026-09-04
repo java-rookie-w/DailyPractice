@@ -11,53 +11,51 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * 【练习版】幂等 demo 消费端。手动 ACK 的标准参数：(Message, Channel)。
+ *
+ * 骨架要点：事务边界在 Service 上，ack 必须发生在事务**提交之后**。
  */
 public class IdemConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(IdemConsumer.class);
 
-    private final DedupStore dedupStore;
+    private final IdemOrderService orderService;
 
-    public IdemConsumer(DedupStore dedupStore) {
-        this.dedupStore = dedupStore;
+    public IdemConsumer(IdemOrderService orderService) {
+        this.orderService = orderService;
     }
 
     @RabbitListener(queues = IdemConfig.QUEUE, ackMode = "MANUAL")
     public void receive(Message message, Channel channel) throws IOException {
         long tag = message.getMessageProperties().getDeliveryTag();
-        String msgId = message.getMessageProperties().getMessageId();
+        String messageId = message.getMessageProperties().getMessageId();
+        // ======== TODO 1：从消息头取业务键，而不是拿 messageId 当幂等键 ========
+        String bizKey = message.getMessageProperties().getHeader(IdemProducer.ORDER_ID_HEADER);
         String body = new String(message.getBody(), StandardCharsets.UTF_8);
 
-        log.info("[Consumer] 收到 tag={} msgId={} body={}", tag, msgId, body);
-        try {
-            // ======== TODO 1：幂等占位（false = 重复消息 → ack 后 return） ========
-            if (!dedupStore.tryMark(msgId)) {
-                log.info("[Consumer] 消息重复，msgId={}", msgId);
-                channel.basicAck(tag, false);
-                return;
-            } else {
-                // ======== TODO 3：成功 → channel.basicAck(tag, false) ========
-                log.info("[Consumer] 消息处理成功，msgId={}", msgId);
-                channel.basicAck(tag, false);
-            }
+        log.info("[Consumer] 收到 tag={} messageId={} bizKey={} body={}", tag, messageId, bizKey, body);
 
-            // ======== TODO 2：业务处理（body 含 "FAIL" 抛异常） ========
-            if (body.contains("FAIL")) {
-                throw new RuntimeException("模拟业务异常");
-            }
-
-        } catch (Exception e) {
-            //   a) dedupStore.release(msgId)   ← 容易漏的一步
-            //   b) channel.basicNack(tag, false, false)
-            dedupStore.release(msgId);
+        if (bizKey == null) {
+            log.error("[Consumer] 缺少业务键 {}，无法幂等，丢弃 tag={}", IdemProducer.ORDER_ID_HEADER, tag);
             channel.basicNack(tag, false, false);
+            return;
         }
 
-        // ======== TODO 4：失败 catch 里 ========
-        //   a) dedupStore.release(msgId)   ← 容易漏的一步
-        //   b) channel.basicNack(tag, false, false)
+        try {
+            // ======== TODO 2：调 Service（事务在它返回时提交），成功/重复都要 ack ========
+            IdemOrderService.Result result = orderService.handle(bizKey);
+            if (result == IdemOrderService.Result.DUPLICATE) {
+                log.warn("[Consumer] 重复消息，业务未执行，直接 ack 丢弃 bizKey={}", bizKey);
+            } else {
+                log.info("[Consumer] 业务处理完成，ack bizKey={}", bizKey);
+            }
+            channel.basicAck(tag, false);
 
-        // TODO 写完之前先让编译通过：
-//        channel.basicAck(tag, false);
+        } catch (Exception e) {
+            // ======== TODO 3：失败 → nack（requeue=false） ========
+            // 注意这里**不需要** release：事务回滚时占位已经没了。
+            // 换成 Redis / 跨库去重表才必须 dedupStore.release(bizKey)。
+            log.error("[Consumer] 处理失败，事务已回滚（占位随之消失）bizKey={} err={}", bizKey, e.getMessage());
+            channel.basicNack(tag, false, false);
+        }
     }
 }

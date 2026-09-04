@@ -36,7 +36,7 @@ public class DelayProducer {
      // rabbitTemplate.convertAndSend("", QUEUE_LEVEL_QUEUE, body, persistent());
      */
     public void sendQueueLevel(String body) {
-        // TODO 1
+        rabbitTemplate.convertAndSend("", QUEUE_LEVEL_QUEUE, body, persistent());
     }
 
     /**
@@ -45,7 +45,10 @@ public class DelayProducer {
      // m.getMessageProperties().setExpiration(String.valueOf(ttlMs));  // 单位 ms，String 类型！
      */
     public void sendMessageLevel(String body, int ttlMs) {
-        // TODO 2
+        rabbitTemplate.convertAndSend("", MESSAGE_LEVEL_QUEUE, body, m -> {
+            m.getMessageProperties().setExpiration(String.valueOf(ttlMs));
+            return m;
+        });
     }
 
     /**
@@ -60,6 +63,9 @@ public class DelayProducer {
     public void produce() {
         // TODO 3
         log.info("================ 延迟 demo(骨架) 第 {} 轮 {} ================", ++round, now());
+        sendQueueLevel("Q-队列级TTL(期望10s)");
+        sendMessageLevel("M-B(期望8s，先发、在队头)", 8000);
+        sendMessageLevel("M-A(期望2s，后发、被堵)", 2000);
     }
 
     private MessagePostProcessor persistent() {

@@ -36,25 +36,39 @@ public class DelayConfig {
      * 要求：durable + ttl(10000) + 死信到 DLX_EXCHANGE（rk 用 READY_ROUTING_KEY）
      * 提示：QueueBuilder.durable(QUEUE_LEVEL_QUEUE).ttl(...).deadLetterExchange(...).deadLetterRoutingKey(...).build();
      */
-    // @Bean
-    // public Queue queueLevelQueue() { ... }
+     @Bean
+    public Queue queueLevelQueue() {
+        return QueueBuilder.durable(QUEUE_LEVEL_QUEUE)
+                .ttl(10000)
+                .deadLetterExchange(DLX_EXCHANGE)
+                .deadLetterRoutingKey(READY_ROUTING_KEY)
+                .build();
+    }
 
     /**
      * TODO 2：消息级 TTL 的等待队列
      * 要求：durable + **不设 ttl**（消息自己带 expiration）+ 死信路由同上
      */
-    // @Bean
-    // public Queue messageLevelQueue() { ... }
-
+     @Bean
+    public Queue messageLevelQueue() {
+         return QueueBuilder.durable(MESSAGE_LEVEL_QUEUE)
+                 .deadLetterExchange(DLX_EXCHANGE)
+                 .deadLetterRoutingKey(READY_ROUTING_KEY)
+                 .build();
+     }
     /** TODO 3：死信交换机（direct + 持久化，名字用 DLX_EXCHANGE） */
-    // @Bean
-    // public DirectExchange delayDlx() { ... }
-
+    @Bean
+    public DirectExchange dlxExchange() {
+        return ExchangeBuilder.directExchange(DLX_EXCHANGE).durable(true).build();
+    }
     /** TODO 4：就绪队列（持久化即可） */
-    // @Bean
-    // public Queue readyQueue() { ... }
-
+    @Bean
+    public Queue readyQueue() {
+        return QueueBuilder.durable(READY_QUEUE).build();
+    }
     /** TODO 5：把就绪队列绑到死信交换机（routing key 用 READY_ROUTING_KEY） */
-    // @Bean
-    // public Binding readyBinding() { ... }
+    @Bean
+    public Binding readyBinding() {
+        return BindingBuilder.bind(readyQueue()).to(dlxExchange()).with(READY_ROUTING_KEY);
+    }
 }

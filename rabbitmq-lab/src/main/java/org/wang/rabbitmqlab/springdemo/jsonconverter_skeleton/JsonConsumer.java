@@ -22,6 +22,8 @@ public class JsonConsumer {
      * 考点：参数类型写 Order，converter 就按这个类型反序列化；
      *      如果这里只写 Object 或不写类型，就得依赖消息头 __TypeId__，且受信任包限制。
      */
-    // @RabbitListener(queues = JsonConfig.QUEUE)
-    // public void receive(Order order) { ... }
+    @RabbitListener(queues = JsonConfig.QUEUE)
+    public void receive(Order order) {
+        log.info("[Consumer] 收到对象 {}", order);
+    }
 }

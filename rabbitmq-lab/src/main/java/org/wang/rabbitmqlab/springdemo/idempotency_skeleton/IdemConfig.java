@@ -27,13 +27,14 @@ public class IdemConfig {
         return new IdemProducer(rabbitTemplate);
     }
 
+    /** TODO 1：消费者改为依赖 IdemOrderService（事务边界在 Service 上，不在监听方法上） */
     @Bean
-    public IdemConsumer idemConsumer(DedupStore dedupStore) {
-        return new IdemConsumer(dedupStore);
+    public IdemConsumer idemConsumer(IdemOrderService orderService) {
+        return new IdemConsumer(orderService);
     }
 
     /**
-     * TODO 1：声明 DedupStore Bean
+     * TODO 2：声明 DedupStore Bean
      * 写法：
      // @Bean
      // public DedupStore dedupStore(org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
@@ -46,19 +47,28 @@ public class IdemConfig {
          return new JdbcDedupStore(jdbcTemplate);
      }
 
-    /** TODO 2：声明交换机（direct + 持久化，名字用常量 EXCHANGE） */
+    /**
+     * TODO 3：声明业务 Service Bean（占位 + 业务更新同事务）
+     * 事务管理器（DataSourceTransactionManager）同样是 Boot 自动配置的。
+     */
+    @Bean
+    public IdemOrderService idemOrderService(JdbcTemplate jdbcTemplate, DedupStore dedupStore) {
+        return new IdemOrderService(jdbcTemplate, dedupStore);
+    }
+
+    /** TODO 4：声明交换机（direct + 持久化，名字用常量 EXCHANGE） */
     @Bean
     public DirectExchange directExchange() {
         return ExchangeBuilder.directExchange(EXCHANGE).durable(true).build();
     }
 
-    /** TODO 3：声明队列（持久化即可，本 demo 不配死信） */
+    /** TODO 5：声明队列（持久化即可，本 demo 不配死信） */
     @Bean
     public Queue queue() {
         return QueueBuilder.durable(QUEUE).build();
     }
 
-    /** TODO 4：把队列绑到交换机上（routing key 用常量 ROUTING_KEY） */
+    /** TODO 6：把队列绑到交换机上（routing key 用常量 ROUTING_KEY） */
     @Bean
     public Binding binding() {
         return BindingBuilder.bind(queue()).to(directExchange()).with(ROUTING_KEY);

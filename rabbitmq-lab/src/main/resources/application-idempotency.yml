@@ -17,10 +17,24 @@ spring:
           # 手动 ACK 下本 demo 在 catch 里自己 nack，Spring 重试不参与，先关掉避免误判日志
           enabled: false
 
-# H2 内存库不需要配置 URL —— Boot 检测到 classpath 上有 h2 + starter-jdbc 会自动建
-# 内嵌数据源，并执行 schema.sql 建去重表。
-# 想亲眼看表里的数据：工程带着 web + h2，浏览器直接开
-#   http://localhost:8081/h2-console    JDBC URL 填 jdbc:h2:mem:default，用户名 sa，密码空
+  # H2 控制台默认是**关闭**的（spring.h2.console.enabled 默认 false），不显式打开访问不了
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  datasource:
+    # 必须写死库名：Boot 默认给内嵌库起**随机名**（generate-unique-name 默认 true），
+    # 不指定的话，控制台里填 jdbc:h2:mem:default 连到的是另一个新建的空库，看不到表。
+    # DB_CLOSE_DELAY=-1：连接全部关闭时也别销毁这个库，否则控制台一进去数据是空的。
+    url: jdbc:h2:mem:rabbitmq-lab;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+
+# 内嵌库上 Boot 会自动执行 schema.sql（spring.sql.init.mode 默认 embedded），
+# 建好 dedup_record（去重表）+ biz_order（业务表）并预置两笔待支付订单。
+# 想亲眼看数据：http://localhost:8081/h2-console
+#   JDBC URL 填上面的 jdbc:h2:mem:rabbitmq-lab，用户名 sa，密码空
 lab:
   client:
     duration: 60000
