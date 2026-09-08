@@ -14,29 +14,10 @@
     <artifactId>jvm-lab</artifactId>
     <packaging>jar</packaging>
     <name>JVM Lab</name>
-    <description>JVM deep-dive experiments: OOM scenarios, GC tuning, threading, class loading, diagnostic tools</description>
+    <description>JVM 面试实验：内存结构与 OOM、GC、类加载、诊断工具、JIT、线程与线程池</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
+    <!-- 刻意不引入任何三方依赖：
+         1. JVM 实验用纯 JDK 就能跑，引入 Spring / Lombok 只会干扰对 JVM 本身的观察；
+         2. 需要 JOL 打印精确对象布局时，再加 org.openjdk.jol:jol-core。 -->
 
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <finalName>jvm-lab</finalName>
-    </build>
 </project>
